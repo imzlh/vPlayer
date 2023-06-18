@@ -158,12 +158,11 @@ $vp = {
          * @param {有CUE的URL地址} url 
          * @param {如果有封面可以填写} cover
          */
-        load : function(url,cover){
-            var at = url.lastIndexOf('/'),
-                prefix = url.substring(0,at),
-                xhr = new XMLHttpRequest(); 
+        load : function(url,cover,prefix){
+            var xhr = new XMLHttpRequest(); 
             xhr.open('GET',url);        // AJAX请求CUE
             // xhr.overrideMimeType('text/plain; charset=x-user-defined');  // 二进制文件处理(用于CUE文件头解析)
+            if(undefined == prefix) prefix = url.substring(0,url.lastIndexOf('/'));
             xhr.onload = function(){
                 if(this.status != 200) 
                     throw new Error('cue.js:加载失败,服务器返回了'+this.status);

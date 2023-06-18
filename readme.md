@@ -4,9 +4,9 @@
  - 只需要引入JS文件，无需初始化直接用
  - 不支持跨域，请LRC和CUE都PULL至自己的服务器
 
-![PC](PC.png)
+![PC](view/pc.png)
 
-![Phone](phone.png)
+![Phone](view/phone.png)
 
 ## 使用
 推送至vPlayer: `$vp.list.push(数据)`
