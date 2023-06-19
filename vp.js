@@ -302,7 +302,7 @@ $vp = {
             box = $vp.e.box;
         if(typeof mode != 'string') 
             mode = modes[box.getAttribute('mode')] || 'min';
-        if(mode == 'full') this.e.more.onresize();
+        if(mode == 'full') setTimeout(()=>this.e.more.onresize(),100);
         box.setAttribute('mode',mode);
     },
     /**
@@ -443,15 +443,20 @@ if(undefined == HTMLAudioElement){
 }
 // 唯一需要JS计算的大小
 (function(){
-    var cover = $vp.e.cover;
-    $vp.e.more.onresize = function(){
+    var more = $vp.e.more,
+        cover = $vp.e.cover,
+        lrc = $vp.e.lrc;
+    more.onresize = function(){
         var rem = parseInt(getComputedStyle(document.documentElement).fontSize),
             vw = document.documentElement.clientWidth,
-            vh = document.documentElement.clientHeight
-            w = this.clientWidth || vw,h = this.clientHeight || vh;
-        if(this instanceof HTMLElement && 50*rem >= vw) return;  // 小屏幕设备无需计算
-        cover.style.height = cover.style.width = (w*0.4<=h ? w*0.4 : h) +'px';
+            w = more.clientWidth ,h = more.clientHeight,
+            result = w*0.4<=h ? w*0.4 : h;
+        if(50*rem >= vw) return;  // 小屏幕设备无需计算
+        cover.style.height = cover.style.width = result +'px';
+        cover.style.marginTop = (h - result)/2 + 'px';
+        lrc.style.width = w - result + 'px';
     };
+    window.addEventListener('resize',more.onresize);
 })();
 // 播放器时间监听
 (function(){

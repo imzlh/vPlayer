@@ -72,23 +72,26 @@
 #vp_more{
     position: absolute;
     inset: 2rem 0 7rem 0;
-    display: flex;
-    align-items: center;
     z-index: -1;
+    overflow: hidden;
+}
+#vp_cover{
+    float: left;
 }
 #vp_lyrics{
     overflow-y: scroll;
     box-sizing: border-box;
     scroll-behavior: smooth;
-    flex-grow: 1;
+    float: right;
 }
 #vp_lyrics::before{
     display: none;
     content: '没有歌词';
 }
 #vp_lyrics[empty=true]{
-    padding: 50% 0;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     overflow-y: hidden;
 }
 #vp_lyrics[empty=true]::before{
@@ -98,6 +101,7 @@
     color: rgb(80, 80, 80);
     width: 100%;
     text-align: center;
+    word-break: break-all;
 }
 #vp_lyrics > .current,#vp_lyrics::before{
     color: rgb(19, 99, 133);
@@ -232,7 +236,6 @@
         height: 100%;
     }
     #vp_more > *{
-        margin: 1rem;
         display: inline-block;
     }
 }
@@ -245,9 +248,10 @@
         height: 100vh !important;
         opacity: 0.4;
         z-index: -1;
+        margin-top: 0 !important;
     }
     #vp_lyrics{
-        width: 100vw;
-        height: calc(100vh - 14rem);
+        width: 100% !important;
+        height: 100%;
     }
 }
