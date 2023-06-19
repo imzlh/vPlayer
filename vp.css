@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /* 全局 */
 #vp{
     position: fixed;
@@ -73,17 +74,24 @@
     box-sizing: border-box;
     scroll-behavior: smooth;
 }
-#vp_lyrics::before,#vp_lyrics::after{
-    display: block;
-    height: 50%;
-    width: 100%;
+#vp_lyrics::before{
+    display: none;
+    content: '没有歌词';
+}
+#vp_lyrics[empty=true]{
+    vertical-align: middle;
+    text-align: center;
+    overflow-y: hidden;
+}
+#vp_lyrics[empty=true]::before{
+    display: inline;
 }
 #vp_lyrics > p{
     color: rgb(80, 80, 80);
     width: 100%;
     text-align: center;
 }
-#vp_lyrics > .current{
+#vp_lyrics > .current,#vp_lyrics::before{
     color: rgb(19, 99, 133);
     font-size: 1.5em;
 }
@@ -142,7 +150,7 @@
 /* vpRange按钮组 */
 .vp_range{
     border-radius: 0.25rem;
-    border: solid 0.1rem rgb(6, 109, 44);
+    border: solid 0.1rem rgb(7, 89, 144);
     display: flex;
 }
 .vp_range > *{
@@ -150,9 +158,6 @@
     padding: 0.5rem 1rem;
     transition: all 0.1s;
     flex-grow: 1;
-}
-.vp_range > *:hover{
-    background-color: rgb(88, 193, 193);
 }
 .vp_range > .selected{
     background-color: rgb(7, 89, 144);

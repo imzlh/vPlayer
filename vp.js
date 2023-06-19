@@ -2,6 +2,14 @@
  * vPlayer
  */
 
+// ============ Array AT() ====================
+if(undefined == Array.prototype.at)
+    Array.prototype.at = function(num){
+        if(Math.abs(num) > this.length) return undefined;
+        if(num >= 0 ) return this[num];
+        else return this[this.length + num];
+    };
+
 // ============ DOM API:仿jQuery ===============
 var all = HTMLElement.prototype,col = HTMLCollection.prototype;
 col.forEach =   function(call){
@@ -23,19 +31,6 @@ all.toggle =    function(show){
 };
 
 // ============ API:字符串操作类 ================
-/**
- * 检查HEX数组是否与字符串匹配
- * @param {HEX数组} hex 
- * @returns 是否匹配
- */
-String.prototype.matchHex = function(hex){
-    if(typeof hex != 'object') 
-        throw new TypeError('matchHex require param #1 typeof array.'+(typeof hex)+' was given.');
-    var _ = '';
-    for (let i = 0; i < hex.length; i++) 
-        _ += String.fromCharCode(hex[i]);
-    return _ == this;
-},
 /**
  * 获取字符串的缩进数目(空格数)
  * @returns 缩进数目
@@ -93,10 +88,6 @@ Array.prototype.end = function(){
 };
 
 $vp = {
-    setting :{
-        cover   : 'default-cover.svg',
-        lrc     : "[00:00] vPlayer V1\n[00:10] Powered by izGroup"
-    },
     list : {
         list : [],      // 音频列表(允许RANGE和META)
         /**
@@ -107,8 +98,6 @@ $vp = {
          */
         parse : function(cue,prefix,cover){
             // CUE类型有一个特殊头
-            // if(!cue.substr(0,3).matchHex([0xEF,0xBB,0xBF]))
-            //     throw new TypeError('cue.js:这似乎不是CUE类型，无法继续');
             var file = cue.substr(3).split('\n') , data , inblock , $data, meta = {} , indent , _;
             // 逐行解析
             for (let i = 0; i < file.length; i++)
@@ -161,7 +150,6 @@ $vp = {
         load : function(url,cover,prefix){
             var xhr = new XMLHttpRequest(); 
             xhr.open('GET',url);        // AJAX请求CUE
-            // xhr.overrideMimeType('text/plain; charset=x-user-defined');  // 二进制文件处理(用于CUE文件头解析)
             if(undefined == prefix) prefix = url.substring(0,url.lastIndexOf('/'));
             xhr.onload = function(){
                 if(this.status != 200) 
@@ -173,6 +161,11 @@ $vp = {
             };
             xhr.send();
         },
+        /**
+         * 将音乐加入到列表，必须包含file(音乐URL路径)
+         * 建议包含cover(封面),lrc(歌词路径),performer(演奏者),title(音乐名)
+         * @param {音乐数据} opt 
+         */
         push : function(opt){
             var e = document.createElement('div'),
                 id = this.list.length;
@@ -184,16 +177,27 @@ $vp = {
             $vp.e.playlist.append(e);
             this.list.push(opt);
         },
+        /**
+         * 根据ID获取指定的音乐
+         * @param {*} i 
+         * @returns undefined或包含音乐信息的关联数组
+         */
         get : function(i){
-            return this.list[i || 0];
+            return this.list.at(i || 0);
         }
     },
-    // 歌词解析管理模块,后期可能会考虑缓存
+    // 歌词解析管理模块
     lrc :{
-        data:{},
+        data:false, // false表示没有歌词
+        /**
+         * 解析歌词
+         * @param {歌词文本} lyrics 
+         * @returns 
+         */
         parse:function(lyrics){
             var lrc = lyrics.substring(1).split('\n[') , lrd , time , 
                 e , box = $vp.e.lrc;
+            this.data = {};
             box.innerHTML = ''; // 清空
             for (let i = 0; i < lrc.length; i++) {
                 lrd = lrc[i].split(']',2);
@@ -204,7 +208,13 @@ $vp = {
                 e.innerHTML = lrd[1];       // 新建歌词元素
                 box.append(e);              // 插入
             }
+            $vp.e.lrc.setAttribute('empty',false);
         },
+        /**
+         * 从URL加载歌词
+         * @param {歌词的URL} url 
+         * @returns 
+         */
         load:function(url){
             var xhr = new XMLHttpRequest();
             xhr.open('GET',url);
@@ -218,28 +228,43 @@ $vp = {
             }
             xhr.send();
         },
-        update:function(ti){
-            time = Math.floor(ti).toString();          // 早1S,方便动画
+        /**
+         * 此函数用于刷新歌词，不建议使用
+         * @param {时间} time 
+         * @returns 
+         */
+        update:function(time){
+            if(this.data == false) return;              // 没有歌词
+            time = Math.floor(time).toString();         // 使用四舍五入
             var target = this.data[time];
-            if(!(target instanceof HTMLElement)) return; // 歌词无需更新
+            if(!(target instanceof HTMLElement)) return;// 歌词无需更新
             $vp.e.lrc.children.rmClass('current');      // 最大化
             target.classList.add('current');
             // 滚动到用户前
             $vp.e.lrc.scroll(0,target.offsetTop + target.offsetHeight/2 - $vp.e.lrc.offsetHeight/2);
-            
+        },
+        /**
+         * 创建空歌词列表
+         */
+        empty: function(){
+            $vp.e.lrc.setAttribute('empty',true);
+            $vp.e.lrc.innerHTML = '';
+            this.data = false;
         }
     },
+    // BTN操作API
     api:{
-        min :       ()=>$vp.e.box.setAttribute('mode','min'),// 最小化
-        card :      ()=>$vp.e.box.setAttribute('mode','card'),// 卡片模式
-        full :      ()=>$vp.e.box.setAttribute('mode','full'),// 最大化
-        switch:     ()=>$vp.e.box.setAttribute('mode',({min:'card',card:'full',full:'min'})[$vp.e.box.getAttribute('mode')]),
+        min :       ()=>$vp.to('min'),// 最小化
+        card :      ()=>$vp.to('card'),// 卡片模式
+        full :      ()=>$vp.to('full'),// 最大化
+        switch:     ()=>$vp.to(),   // 自动切换
         playlist :  ()=>$vp.e.backdrop.with($vp.e.playlist),// 播放列表
         voice :     ()=>$vp.e.backdrop.with($vp.e.voice),// 声音控制
         next :      ()=>$vp.set(),// 下一曲
-        last :      ()=>$vp.set($vp.e.player.aid-1),// 上一曲
+        last :      ()=>$vp.set('-'),// 上一曲
         play :      ()=>$vp.play()// 播放/暂停
     },
+    // 一大堆HTML元素
     e:{
         box     : document.getElementById('vp'),
         lrc     : document.getElementById('vp_lyrics'),
@@ -265,14 +290,17 @@ $vp = {
             rate  : document.getElementById('vp_setting_playrate')
         }
     },
-    flush:function(){
-        var vp = $vp.e.player,mode = $vp.e.box.getAttribute('mode');
-        if($vp.toNext == Math.ceil(vp.currentTime)) $vp.set();
-        if(mode == 'min') return;
-        if(mode == 'full') $vp.lrc.update(vp.currentTime); // 刷新歌词
-        // 刷新计时器
-        $vp.e.timer.current.innerHTML = vp.currentTime.timeToString();
-        $vp.e.timer.bar.style.width = (vp.currentTime/vp.duration)*100 + '%';
+    /**
+     * 切换UI样式，为空自动切换
+     * 支持"min"(最小化) "card"(卡片) "full"(全屏)
+     * @param {UI模式} mode 
+     */
+    to:function(mode){
+        var modes = {min:'card',card:'full',full:'min'},
+            box = $vp.e.box;
+        if(typeof mode != 'string') 
+            mode = modes[box.getAttribute('mode')] || 'min';
+        box.setAttribute('mode',mode);
     },
     /**
      * 播放或暂停(自动判断)，允许指定参数
@@ -286,31 +314,57 @@ $vp = {
             this.e.player.play();   // 暂停中->播放
         else this.e.player.pause(); // 反之暂停
     },
-    stopTime : -1,
+    range : {}, // CUE专属，在这一段范围中有效
+    /**
+     * 切换到第n首，当然空值或"+"表示下一首，"-"表示上一首
+     * @param {第n首，可选} i 
+     */
     set:function(i){
-        if(undefined == i) i = isNaN(this.e.player.aid)?0:this.e.player.aid+1;
+        // 自动决定
+        if(undefined == i || i == '+') i = isNaN(this.curr_aid)?0:this.curr_aid+1;
+        else if(i == '-') i = this.curr_aid-1;
+        // 超界判断
         if(i < 0) i += this.list.list.length;
         else if(i >= this.list.list.length) i -= this.list.list.length;
+        // 寻找目标
         var src = this.list.get(i);
         if(src == undefined || typeof src.file != 'string')
             throw new TypeError('vp.js:设置的音频出错!');
+        // 获取目标，刷新标题
         var pfm = src.performer
             title = src.title,
             cover = src.cover;
-        src.lrc == undefined ? this.lrc.parse(this.setting.lrc) : this.lrc.load(src.lrc);
-        this.e.cover.style.background = 'url("'+cover+'")',  // 设置封面
-        this.e.title.innerHTML = title+' / <span style="color:gray">'+pfm+'</span>',
-        this.e.player.src = src.file;
-        if(src.type == 'cue'){
-            this.seek(src.range.end());
-            if(this.list.get(i+1) != undefined)
-                this.toNext = Math.ceil(this.list.get(i+1).range.end());
+        this.e.title.innerHTML = title+' / <span style="color:gray">'+pfm+'</span>';
+        // 解析歌词&设置封面
+        if(this.e.player.src != src.file){
+            if(src.lrc != undefined) this.lrc.load(src.lrc);
+            else this.lrc.empty();
+            this.e.cover.style.background = 'url("'+cover+'")',  // 设置封面
+            this.e.player.src = src.file;
         }
-        this.e.player.aid = i;  // 设置音频ID
-        this.e.player.onpause();// 暂停事件
-        this.e.player.load();   // 加载音频
+        // CUE个性化设置
+        if(src.type == 'cue'){
+            var to = src.range[1] || src.range.end(),
+                end = Math.ceil(this.list.get(i+1).range.end());
+            this.seek(to);
+            // 获取范围
+            if(this.list.get(i+1) != undefined)
+                this.range = {
+                    enable  : true,
+                    end     : end,
+                    start   : to,
+                    duration: end - to
+                };
+        }else this.range = {};
+        this.curr_aid = i;  // 设置音频ID
     },
-    seekTo : -1,
+    seekTo : -1,        // 当可以播放后切换到的时间
+    rate   : 1.0,       // 默认播放速度
+    /**
+     * 切换到一个时间，支持字符串
+     * @param {目标时间} time 
+     * @returns 
+     */
     seek : function(time){
         if(typeof time == 'string') time = time.timeToInt();
         if(this.e.player.readyState < 2) return this.seekto = time;
@@ -336,30 +390,52 @@ if(undefined == HTMLAudioElement){
     $vp = null;     // 清空
     throw new Error('vp.js:你的浏览器不支持VPlayer(audio不受支持)!');
 }
-$vp.e.player.onended = ()=>$vp.set();   // 自动下一首
-$vp.e.player.oncanplay = function(){
-    // 初始化时长度并播放
-    $vp.e.timer.total.innerHTML = this.duration.timeToString();
-    if($vp.seekto >= 0) {
-        this.currentTime = $vp.seekto;
-        $vp.seekto = -1;
+// 播放器时间监听
+(function(){
+    var p = $vp.e.player;
+    p.onended = ()=>$vp.set();   // 自动下一首
+    p.oncanplay = function(){
+        // 初始化时长度并播放
+        $vp.e.timer.total.innerHTML = ($vp.range.duration || this.duration).timeToString();
+        if($vp.seekto >= 0) {
+            this.currentTime = $vp.seekto;
+            $vp.seekto = -1;
+        }
+        this.playbackRate = $vp.rate;
+        this.play();
     }
-    this.play();
-}
-$vp.e.player.onpause = function(){      // 暂停时
-    $vp.e.play.playing.style.display = 'none';
-    $vp.e.play.paused.style.display = 'block';
-    clearInterval($vp.timer);
-}
-$vp.e.player.onplay = function(){       // 开始播放时
-    $vp.e.play.playing.style.display = 'block';
-    $vp.e.play.paused.style.display = 'none';
-    $vp.timer = setInterval($vp.flush,500);
-}
+    p.onpause = function(){      // 暂停时
+        $vp.e.play.playing.style.display = 'none';
+        $vp.e.play.paused.style.display = 'block';
+    }
+    p.onplay = function(){       // 开始播放时
+        $vp.e.play.playing.style.display = 'block';
+        $vp.e.play.paused.style.display = 'none';
+    }
+    p.ontimeupdate = function(){
+        var mode = $vp.e.box.getAttribute('mode');
+        if($vp.range.end == Math.ceil(this.currentTime) && $vp.range.enable) $vp.set();
+        if(mode == 'min') return;                          // 最小化模式无需计时器
+        if(mode == 'full') $vp.lrc.update(this.currentTime); // 刷新歌词
+        // 刷新计时器
+        $vp.e.timer.current.innerHTML = ($vp.range.enable
+            ? this.currentTime - $vp.range.start
+            : this.currentTime).timeToString();
+        $vp.e.timer.bar.style.width = $vp.range.enable
+            ? (this.currentTime - $vp.range.start)/$vp.range.duration*100 + '%'
+            : this.currentTime/this.duration*100 + '%';
+    };  // 时间更改时
+    p.onvolumechange = function(){// 音量更改
+        $vp.e.setting.volume.val = this.volume;
+    }
+})();
 // 切换时长
 $vp.e.timer.barBox.onclick = function(e){
-    $vp.e.player.currentTime = (e.pageX / this.clientWidth) * $vp.e.player.duration;
+    $vp.e.player.currentTime = $vp.range.enable
+    ? e.pageX / this.clientWidth * $vp.range.duration + $vp.range.start
+    : e.pageX / this.clientWidth * $vp.e.player.duration;
 }
+
 // 调节音量、倍速
 $vp.e.setting.volume.onchange = function(){
     $vp.e.player.volume = this.value;
@@ -371,7 +447,7 @@ $vp.e.setting.rate.onclick = function(e){
     target.classList.add('selected');
     value = target.getAttribute('value');
     if(isNaN(value)) return true;
-    $vp.e.player.playbackRate = parseFloat(value);
+    $vp.e.player.playbackRate = $vp.rate = parseFloat(value);
 }
 // BackDrop全自动背景
 $vp.e.backdrop.onclick = function(){

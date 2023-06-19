@@ -12,6 +12,13 @@
 对于文件管理器(类似我的项目vList)，**前端解析CUE**还是很不错的
 然后设计之初只是想实现一遍(Github上很少有这类项目)，仅此而已
 
+## 为什么叫vPlayer?
+不是v(ideo)Player，而是v(irtual)Player
+用解析CUE的能力生成虚拟歌单，如同真是分开的一样流畅丝滑操作
+个人感觉比vlc还好用(切换时明显卡顿)，这就够了
+
+![cuePlay](view/cue.png)
+
 ## 使用
 示例(index.html)中已经贴出简单用法了
 可以参考[文档](http://imzlh.top:81/vplayer/document.html)
