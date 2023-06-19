@@ -74,6 +74,7 @@
     inset: 2rem 0 7rem 0;
     display: flex;
     align-items: center;
+    z-index: -1;
 }
 #vp_lyrics{
     overflow-y: scroll;
@@ -86,7 +87,7 @@
     content: '没有歌词';
 }
 #vp_lyrics[empty=true]{
-    vertical-align: middle;
+    padding: 50% 0;
     text-align: center;
     overflow-y: hidden;
 }
@@ -162,9 +163,10 @@
 }
 .vp_range > *{
     display: inline-block;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0;
     transition: all 0.1s;
     flex-grow: 1;
+    text-align: center;
 }
 .vp_range > .selected{
     background-color: rgb(7, 89, 144);

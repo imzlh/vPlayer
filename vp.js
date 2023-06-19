@@ -260,7 +260,7 @@ $vp = {
         switch:     ()=>$vp.to(),   // 自动切换
         playlist :  ()=>$vp.e.backdrop.with($vp.e.playlist),// 播放列表
         voice :     ()=>$vp.e.backdrop.with($vp.e.voice),// 声音控制
-        next :      ()=>$vp.set(),// 下一曲
+        next :      ()=>$vp.set('+'),// 下一曲
         last :      ()=>$vp.set('-'),// 上一曲
         play :      ()=>$vp.play()// 播放/暂停
     },
@@ -288,7 +288,8 @@ $vp = {
         backdrop : document.getElementById('vp_dialog_backdrop'),
         setting:{
             volume: document.getElementById('vp_setting_volume'),
-            rate  : document.getElementById('vp_setting_playrate')
+            rate  : document.getElementById('vp_setting_playrate'),
+            loop  : document.getElementById('vp_setting_loop')
         }
     },
     /**
@@ -318,12 +319,13 @@ $vp = {
     },
     range : {}, // CUE专属，在这一段范围中有效
     /**
-     * 切换到第n首，当然空值或"+"表示下一首，"-"表示上一首
+     * 切换到第n首，当然空值表示重新播放，"+"表示下一首，"-"表示上一首
      * @param {第n首，可选} i 
      */
     set:function(i){
         // 自动决定
-        if(undefined == i || i == '+') i = isNaN(this.curr_aid)?0:this.curr_aid+1;
+        if(undefined == i) i = this.curr_aid;
+        else if(i == '+') i = isNaN(this.curr_aid)?0:this.curr_aid+1;
         else if(i == '-') i = this.curr_aid-1;
         // 超界判断
         if(i < 0) i += this.list.list.length;
@@ -362,6 +364,7 @@ $vp = {
     },
     seekTo : -1,        // 当可以播放后切换到的时间
     rate   : 1.0,       // 默认播放速度
+    loop   : false,     // 循环播放
     /**
      * 切换到一个时间，支持字符串
      * @param {目标时间} time 
@@ -381,6 +384,16 @@ $vp.e.btns.forEach(function(e){
     if(action == null) return;      // 没有action属性
     e.onclick = $vp.api[action];    // 操作
 });
+// 初始化range特性
+document.getElementsByClassName('vp_range').forEach(e=>e.onclick = function(e){
+    var target = e.target , value;
+    if(target.tagName != 'R') return true;
+    this.children.rmClass('selected');
+    target.classList.add('selected');
+    value = target.getAttribute('value');
+    this.onvaluechange(value);
+});
+// Box事件监听
 (function(b){
     // 右键、长按监听
     b.oncontextmenu = b.ondblclick = function(){
@@ -443,7 +456,12 @@ if(undefined == HTMLAudioElement){
 // 播放器时间监听
 (function(){
     var p = $vp.e.player;
-    p.onended = ()=>$vp.set();   // 自动下一首
+    p.onended = function(){
+        if($vp.loop == 'loop') $vp.set();
+        else if($vp.loop == 'random') 
+            $vp.set(Math.floor($vp.list.list.length * Math.random()));
+        else $vp.set('+');
+    }   // 自动切换
     p.oncanplay = function(){
         // 初始化时长度并播放
         $vp.e.timer.total.innerHTML = ($vp.range.duration || this.duration).timeToString();
@@ -464,7 +482,7 @@ if(undefined == HTMLAudioElement){
     }
     p.ontimeupdate = function(){
         var mode = $vp.e.box.getAttribute('mode');
-        if($vp.range.end == Math.ceil(this.currentTime) && $vp.range.enable) $vp.set();
+        if($vp.range.end == Math.ceil(this.currentTime) && $vp.range.enable) this.onended();
         if(mode == 'min') return;                          // 最小化模式无需计时器
         if(mode == 'full') $vp.lrc.update(this.currentTime); // 刷新歌词
         // 刷新计时器
@@ -486,19 +504,13 @@ $vp.e.timer.barBox.onclick = function(e){
     : e.pageX / this.clientWidth * $vp.e.player.duration;
 }
 
-// 调节音量、倍速
+// 调节音量、倍速、循环模式
 $vp.e.setting.volume.onchange = function(){
     $vp.e.player.volume = this.value;
 }
-$vp.e.setting.rate.onclick = function(e){
-    var target = e.target , value;
-    if(target.tagName != 'R') return true;
-    this.children.rmClass('selected');
-    target.classList.add('selected');
-    value = target.getAttribute('value');
-    if(isNaN(value)) return true;
+$vp.e.setting.rate.onvaluechange = value =>
     $vp.e.player.playbackRate = $vp.rate = parseFloat(value);
-}
+$vp.e.setting.loop.onvaluechange = v=>$vp.loop = v;
 // BackDrop全自动背景
 $vp.e.backdrop.onclick = function(){
     this.target.style.display = this.style.display = 'none';
