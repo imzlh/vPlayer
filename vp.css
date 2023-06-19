@@ -124,17 +124,39 @@
 #vp_dialog_playlist > div:hover{
     background-color: lightblue;
 }
-#vp_dialog_voice > p:first-child{
+#vp_dialog_voice > div:first-child{
     margin-top: 1rem;
 }
-#vp_dialog_voice > p:last-child{
+#vp_dialog_voice > div:last-child{
     margin-bottom: 1rem;
 }
-#vp_dialog_voice > p{
+#vp_dialog_voice > div{
     margin: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
 }
-#vp_dialog_voice input{
-    width: calc(100% - 4rem);
+#vp_dialog_voice > div > *{
+    flex-grow: 1;
+    margin-left: 2rem;
+}
+/* vpRange按钮组 */
+.vp_range{
+    border-radius: 0.25rem;
+    border: solid 0.1rem rgb(6, 109, 44);
+    display: flex;
+}
+.vp_range > *{
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    transition: all 0.1s;
+    flex-grow: 1;
+}
+.vp_range > *:hover{
+    background-color: rgb(88, 193, 193);
+}
+.vp_range > .selected{
+    background-color: rgb(7, 89, 144);
+    color: white;
 }
 /* 最小按钮 */
 #vp[mode=min]{

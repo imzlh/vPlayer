@@ -58,10 +58,13 @@
             </svg>
         </div>
         <!-- 全屏 -->
-        <div class="vp_btn" action="full">
-            <svg fill="currentColor" viewBox="0 0 16 16">
+        <div class="vp_btn" action="switch">
+            <!-- <svg fill="currentColor" viewBox="0 0 16 16">
                 <path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h13A1.5 1.5 0 0 1 16 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 12.5v-9zM1.5 3a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-13z"/>
                 <path d="M2 4.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1H3v2.5a.5.5 0 0 1-1 0v-3zm12 7a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1H13V8.5a.5.5 0 0 1 1 0v3z"/>
+            </svg> -->
+            <svg fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5z"/>
             </svg>
         </div>
     </div>
@@ -79,10 +82,20 @@
 <div id="vp_dialog_backdrop"></div>
 <div id="vp_dialog_playlist" class="vp_dialog" title="播放列表"></div>
 <div id="vp_dialog_voice"  class="vp_dialog" title="更多设置">
-    <p>
-        音量
+    <div>
+        音量大小 : 
         <input type="range" id="vp_setting_volume" class="full" step="0.01" min="0" max="1" value="1">
-    </p>
+    </div>
+    <div>
+        倍速播放 : 
+        <div class="vp_range" id="vp_setting_playrate">
+            <r value="0.8">0.8X</r>
+            <r value="1" class="selected">1X</r>
+            <r value="1.25">1.25X</r>
+            <r value="1.5">1.5X</r>
+            <r value="2">2X</r>
+        </div>
+    </div>
 </div>
 <!-- 这个必须在之后 -->
 <script src="vp.js"></script>
@@ -95,6 +108,8 @@
     $vp.list.push({
         file : 'http://imzlh.top:81/@/%E9%AD%94%E6%B3%95%E5%B0%91%E5%A5%B3%E5%B0%8F%E5%9C%86/CDs/%E5%AE%98%E6%96%B9CD%20Ultimate%20Best/SVWC-70281.opus',
         lrc  : 'demo/demo.lrc',
+        performer : '幸田夢波',
+        title : 'WHIMSICAL WAYWARD WISH',
         cover: 'http://imzlh.top:81/@/%E9%AD%94%E6%B3%95%E5%B0%91%E5%A5%B3%E5%B0%8F%E5%9C%86/CDs/%E5%AE%98%E6%96%B9CD%20Ultimate%20Best/Scans/01.webp'
     });
 </script>

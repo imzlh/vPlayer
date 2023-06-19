@@ -133,7 +133,7 @@ $vp = {
                         $data = {
                             file : prefix+inblock,
                             type : 'cue',
-                            performer : meta.performer || '未知歌手',
+                            performer : meta.performer,
                             cover : cover
                         };     // 刷新data
                     }else if(indent == 4){
@@ -176,16 +176,16 @@ $vp = {
         push : function(opt){
             var e = document.createElement('div'),
                 id = this.list.length;
-            e.innerHTML = opt.title || decodeURIComponent(opt.file.split('/').end());
+            if(typeof opt.title != 'string') opt.title = decodeURIComponent(opt.file.split('/').end());
+            if(typeof opt.performer != 'string') opt.performer = '未知歌手';
+            if(typeof opt.cover != 'string') opt.cover = this.setting.cover;
+            e.innerHTML = opt.title+' / <span style="color:gray">'+opt.performer+'</span>';
             e.onclick = function(){$vp.set(id);};
             $vp.e.playlist.append(e);
             this.list.push(opt);
         },
         get : function(i){
             return this.list[i || 0];
-        },
-        cue_autoload : function(){
-
         }
     },
     // 歌词解析管理模块,后期可能会考虑缓存
@@ -233,6 +233,7 @@ $vp = {
         min :       ()=>$vp.e.box.setAttribute('mode','min'),// 最小化
         card :      ()=>$vp.e.box.setAttribute('mode','card'),// 卡片模式
         full :      ()=>$vp.e.box.setAttribute('mode','full'),// 最大化
+        switch:     ()=>$vp.e.box.setAttribute('mode',({min:'card',card:'full',full:'min'})[$vp.e.box.getAttribute('mode')]),
         playlist :  ()=>$vp.e.backdrop.with($vp.e.playlist),// 播放列表
         voice :     ()=>$vp.e.backdrop.with($vp.e.voice),// 声音控制
         next :      ()=>$vp.set(),// 下一曲
@@ -260,7 +261,8 @@ $vp = {
         voice: document.getElementById('vp_dialog_voice'),
         backdrop : document.getElementById('vp_dialog_backdrop'),
         setting:{
-            volume: document.getElementById('vp_setting_volume')
+            volume: document.getElementById('vp_setting_volume'),
+            rate  : document.getElementById('vp_setting_playrate')
         }
     },
     flush:function(){
@@ -292,9 +294,9 @@ $vp = {
         var src = this.list.get(i);
         if(src == undefined || typeof src.file != 'string')
             throw new TypeError('vp.js:设置的音频出错!');
-        var pfm = src.performer || '未知歌手',
-            title = src.title || decodeURIComponent(src.file.split('/').end()),
-            cover = src.cover || this.setting.cover;
+        var pfm = src.performer
+            title = src.title,
+            cover = src.cover;
         src.lrc == undefined ? this.lrc.parse(this.setting.lrc) : this.lrc.load(src.lrc);
         this.e.cover.style.background = 'url("'+cover+'")',  // 设置封面
         this.e.title.innerHTML = title+' / <span style="color:gray">'+pfm+'</span>',
@@ -354,15 +356,24 @@ $vp.e.player.onplay = function(){       // 开始播放时
     $vp.e.play.paused.style.display = 'none';
     $vp.timer = setInterval($vp.flush,500);
 }
-// SEEK
+// 切换时长
 $vp.e.timer.barBox.onclick = function(e){
     $vp.e.player.currentTime = (e.pageX / this.clientWidth) * $vp.e.player.duration;
 }
-// 调节
+// 调节音量、倍速
 $vp.e.setting.volume.onchange = function(){
     $vp.e.player.volume = this.value;
 }
-// BackDrop
+$vp.e.setting.rate.onclick = function(e){
+    var target = e.target , value;
+    if(target.tagName != 'R') return true;
+    this.children.rmClass('selected');
+    target.classList.add('selected');
+    value = target.getAttribute('value');
+    if(isNaN(value)) return true;
+    $vp.e.player.playbackRate = parseFloat(value);
+}
+// BackDrop全自动背景
 $vp.e.backdrop.onclick = function(){
     this.target.style.display = this.style.display = 'none';
 }
