@@ -69,10 +69,17 @@
     border: solid 1px gray;
 }
 /* 专辑设置 */
+#vp_more{
+    position: absolute;
+    inset: 2rem 0 7rem 0;
+    display: flex;
+    align-items: center;
+}
 #vp_lyrics{
     overflow-y: scroll;
     box-sizing: border-box;
     scroll-behavior: smooth;
+    flex-grow: 1;
 }
 #vp_lyrics::before{
     display: none;
@@ -122,7 +129,7 @@
 #vp_dialog_backdrop {
     display: none;
     position: fixed;z-index: 3;
-    top: 0;left: 0;width: 100vw;height: 100vh;
+    inset: 0;width: 100vw;height: 100vh;
     background: rgba(0, 0, 0, 0.4);
 }
 #vp_dialog_playlist > div{
@@ -180,8 +187,10 @@
 }
 /* 最大化 */
 #vp[mode=full]{
-    top: 0;
-    left: 0;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0!important;
     width: 100vw;
     height: 100vh;
     height: 100svh; /*兼容不好但特好用*/
@@ -206,21 +215,19 @@
 #vp:not([mode=min]) > #vp_btns>.vp_btn{
     margin: 0 0.5rem;
 }
+
 @media screen and (min-width:50rem) {
     #vp_cover{
         border-radius: 100vmax;
         background-size: cover !important;
-        height: calc(100vh - 16rem);
-        width: calc(100vh - 16rem);
-    }
-    #vp_lyrics{
-        width: calc(100vw - 100vh + 9rem);
-        height: calc(100vh - 14rem);
     }
     #vp_more{
         width: 100vw;
-        padding: 1rem;
+        margin: 0 1rem;
         box-sizing: border-box;
+    }
+    #vp_lyrics{
+        height: 100%;
     }
     #vp_more > *{
         margin: 1rem;
@@ -231,8 +238,9 @@
     #vp_cover{
         background-size: cover !important;
         position: absolute;
-        left: 0;top: 0;
-        width: 100vw;height: 100vh;
+        inset: 0;
+        width: 100vw !important;
+        height: 100vh !important;
         opacity: 0.4;
         z-index: -1;
     }

@@ -274,6 +274,7 @@ $vp = {
             playing : document.getElementById('vp_btn_pause'),
             paused  : document.getElementById('vp_btn_play')
         },
+        more    : document.getElementById('vp_more'),
         cover   : document.getElementById('vp_cover'),
         title   : document.getElementById('vp_title'),
         timer   : {
@@ -300,6 +301,7 @@ $vp = {
             box = $vp.e.box;
         if(typeof mode != 'string') 
             mode = modes[box.getAttribute('mode')] || 'min';
+        if(mode == 'full') this.e.more.onresize();
         box.setAttribute('mode',mode);
     },
     /**
@@ -379,17 +381,65 @@ $vp.e.btns.forEach(function(e){
     if(action == null) return;      // 没有action属性
     e.onclick = $vp.api[action];    // 操作
 });
-// 右键监听
-$vp.e.box.oncontextmenu = $vp.e.box.ondblclick = function(){
-    if(this.getAttribute('mode') == 'min')
-        this.setAttribute('mode','card');
-    return false;
-}
+(function(b){
+    // 右键、长按监听
+    b.oncontextmenu = b.ondblclick = function(){
+        if(this.getAttribute('mode') == 'min')
+            this.setAttribute('mode','card');
+        return false;
+    }
+    // 拖拽移动支持
+    function move(xc,yc,x,y){
+        b.style.left = `${xc - x}px`,
+        b.style.top  = `${yc - y}px`;
+    }
+    b.onmousedown = function(e){
+        if(b.getAttribute('mode') != 'min') return true;
+        var oX = e.offsetX,oY = e.offsetY;
+        document.onmousemove = function(e){
+            b.style.right = 'auto',b.style.bottom = 'auto';
+            move(e.pageX,e.pageY,oX,oY);
+            return false;
+        }
+        document.onmouseup = function(){
+            document.onmousemove = document.onmouseleave = null;
+            // 自动附边
+            var val , calc = {
+                'top'    : b.offsetTop,
+                'left'   : b.offsetLeft,
+                'right'  : document.documentElement.clientWidth  - b.offsetLeft - b.clientWidth,
+                'bottom' : document.documentElement.clientHeight - b.offsetTop - b.clientHeight
+            } , min = document.documentElement.clientWidth , who;
+            for (is in calc)
+                if(calc[is] < min) min = calc[is] , who = is;
+            b.style[who] = '2rem',b.style[{
+                'top'   : 'bottom',
+                'bottom': 'top',
+                'left'  :'right',
+                'right' :'left'
+            }[who]] = 'auto';
+            return false;
+        }
+        return false;
+    }
+})($vp.e.box);
 // 检查audio支持
 if(undefined == HTMLAudioElement){
     $vp = null;     // 清空
     throw new Error('vp.js:你的浏览器不支持VPlayer(audio不受支持)!');
 }
+// 唯一需要JS计算的大小
+(function(){
+    var cover = $vp.e.cover;
+    $vp.e.more.onresize = function(){
+        var rem = parseInt(getComputedStyle(document.documentElement).fontSize),
+            vw = document.documentElement.clientWidth,
+            vh = document.documentElement.clientHeight
+            w = this.clientWidth || vw,h = this.clientHeight || vh;
+        if(this instanceof HTMLElement && 50*rem >= vw) return;  // 小屏幕设备无需计算
+        cover.style.height = cover.style.width = (w*0.4<=h ? w*0.4 : h) +'px';
+    };
+})();
 // 播放器时间监听
 (function(){
     var p = $vp.e.player;
