@@ -133,7 +133,7 @@ $vp = {
                         if($data != null)           // 上一个TRACK需要保存
                             this.push($data);       // 载入list中
                         $data = {
-                            file : prefix+'/'+inblock,
+                            file : prefix+inblock,
                             type : 'cue',
                             performer : meta.performer,
                             cover : cover
@@ -178,17 +178,19 @@ $vp = {
          * 将音乐加入到列表，必须包含file(音乐URL路径)
          * 建议包含cover(封面),lrc(歌词路径),performer(演奏者),title(音乐名)
          * @param {音乐数据} opt 
+         * @returns 插入目标的ID
          */
         push : function(opt){
             var e = document.createElement('div'),
                 id = this.list.length;
             if(typeof opt.title != 'string') opt.title = decodeURIComponent(opt.file.split('/').end());
             if(typeof opt.performer != 'string') opt.performer = '未知歌手';
-            if(typeof opt.cover != 'string') opt.cover = this.setting.cover;
+            if(typeof opt.cover != 'string') opt.cover = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iY3VycmVudENvbG9yIiBjbGFzcz0iYmkgYmktc291bmR3YXZlIiB2aWV3Qm94PSIwIDAgMTYgMTYiPgogIDxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTguNSAyYS41LjUgMCAwIDEgLjUuNXYxMWEuNS41IDAgMCAxLTEgMHYtMTFhLjUuNSAwIDAgMSAuNS0uNXptLTIgMmEuNS41IDAgMCAxIC41LjV2N2EuNS41IDAgMCAxLTEgMHYtN2EuNS41IDAgMCAxIC41LS41em00IDBhLjUuNSAwIDAgMSAuNS41djdhLjUuNSAwIDAgMS0xIDB2LTdhLjUuNSAwIDAgMSAuNS0uNXptLTYgMS41QS41LjUgMCAwIDEgNSA2djRhLjUuNSAwIDAgMS0xIDBWNmEuNS41IDAgMCAxIC41LS41em04IDBhLjUuNSAwIDAgMSAuNS41djRhLjUuNSAwIDAgMS0xIDBWNmEuNS41IDAgMCAxIC41LS41em0tMTAgMUEuNS41IDAgMCAxIDMgN3YyYS41LjUgMCAwIDEtMSAwVjdhLjUuNSAwIDAgMSAuNS0uNXptMTIgMGEuNS41IDAgMCAxIC41LjV2MmEuNS41IDAgMCAxLTEgMFY3YS41LjUgMCAwIDEgLjUtLjV6Ii8+Cjwvc3ZnPg==';
             e.innerHTML = opt.title+' / <span style="color:gray">'+opt.performer+'</span>';
             e.onclick = function(){$vp.set(id);};
             $vp.e.playlist.append(e);
             this.list.push(opt);
+            return this.list.length -1;
         },
         /**
          * 根据ID获取指定的音乐
@@ -283,7 +285,7 @@ $vp = {
         error   : document.getElementById('vp_error'),
         lrc     : document.getElementById('vp_lyrics'),
         player  : document.getElementById('vp_main'),
-        btns    : document.querySelectorAll('div#vp .vp_btn,div#vp .vp_inline-btn'),
+        btns    : document.querySelectorAll('.vp_btn[action],.vp_inline-btn[action]'),
         play    : {
             playing : document.getElementById('vp_btn_pause'),
             paused  : document.getElementById('vp_btn_play')

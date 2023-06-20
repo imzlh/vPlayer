@@ -24,8 +24,6 @@
     font-size: 1.2em;
 }
 .vp_inline-btn,.vp_btn{
-    width: 1em;
-    height: 1em;
     border-radius: 1em;
     transition: background 0.1s;
 }
@@ -35,8 +33,9 @@
 .vp_btn[action=play]{
     border: solid 0.1rem rgb(41, 155, 225);
 }
-.vp_btn > svg{
-    width: 100%;
+.vp_btn > svg,.vp_inline-btn > svg{
+    width: 1em;
+    height: 1em;
 }
 .vp_btn[disabled=true]{
     pointer-events: none;
