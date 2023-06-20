@@ -38,6 +38,19 @@
 .vp_btn > svg{
     width: 100%;
 }
+.vp_btn[disabled=true]{
+    pointer-events: none;
+    border-color: gray !important;
+}
+#vp_error{
+    position: absolute;
+    inset: 0 0 auto 0;
+    padding: 0.3rem 0;
+    text-align: center;
+    background-color: rgb(213, 86, 86);
+    color: white;
+    display: none;
+}
 #vp_seeker{
     height: 0.25rem;
     border-radius: 0.25rem;

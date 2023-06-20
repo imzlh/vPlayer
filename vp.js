@@ -11,24 +11,33 @@ if(undefined == Array.prototype.at)
     };
 
 // ============ DOM API:仿jQuery ===============
-var all = HTMLElement.prototype,col = HTMLCollection.prototype;
-col.forEach =   function(call){
-    for(var i = 0 ; i < this.length ; i ++ ) call(this[i]);
-};
-col.display =   function(show){
-    this.forEach(e=>e.toggle(show));
-};
-col.hide =     function(){this.forEach(e=>e.style.display='none');};
-col.show =     function(){this.forEach(e=>e.style.display='block');};
-col.rmClass =  function(cl){
-    this.forEach(function(e){
-        if(e.classList.contains(cl)) e.classList.remove(cl);
-    });
-}
-all.toggle =    function(show){
-    // this.hidden=typeof show == 'boolean'?show:!this.hidden;
-    this.style.display = this.style.display=='none'?'block':'none';
-};
+(function(){
+    var all = HTMLElement.prototype,col = HTMLCollection.prototype,nl = NodeList.prototype;
+    col.forEach =   function(call){
+        for(var i = 0 ; i < this.length ; i ++ ) call(this[i]);
+    };
+    nl.display = col.display =   function(show){
+        this.forEach(e=>e.toggle(show));
+    };
+    nl.hide    = col.hide =     function(){this.forEach(e=>e.style.display='none');};
+    nl.show    = col.show =     function(){this.forEach(e=>e.style.display='block');};
+    nl.rmClass = col.rmClass =  function(cl){
+        this.forEach(function(e){
+            if(e.classList.contains(cl)) e.classList.remove(cl);
+        });
+    }
+    nl.attr    = col.attr =      function(attr,value){
+        var col = [];
+        this.forEach(function(e){
+            if(e.getAttribute(attr) == value) col.push(e);
+        });
+        return col;
+    }
+    all.toggle =    function(show){
+        // this.hidden=typeof show == 'boolean'?show:!this.hidden;
+        this.style.display = this.style.display=='none'?'block':'none';
+    };
+})()
 
 // ============ API:字符串操作类 ================
 /**
@@ -97,6 +106,10 @@ $vp = {
          * @param {URL头} prefix
          */
         parse : function(cue,prefix,cover){
+            if(undefined == prefix) prefix = '';
+            else if(typeof prefix == 'string' && prefix.substr(-1,1) != '/')
+                prefix += '/';
+            else prefix = prefix.toString();
             // CUE类型有一个特殊头
             var file = cue.substr(3).split('\n') , data , inblock , $data, meta = {} , indent , _;
             // 逐行解析
@@ -120,7 +133,7 @@ $vp = {
                         if($data != null)           // 上一个TRACK需要保存
                             this.push($data);       // 载入list中
                         $data = {
-                            file : prefix+inblock,
+                            file : prefix+'/'+inblock,
                             type : 'cue',
                             performer : meta.performer,
                             cover : cover
@@ -267,6 +280,7 @@ $vp = {
     // 一大堆HTML元素
     e:{
         box     : document.getElementById('vp'),
+        error   : document.getElementById('vp_error'),
         lrc     : document.getElementById('vp_lyrics'),
         player  : document.getElementById('vp_main'),
         btns    : document.querySelectorAll('div#vp .vp_btn,div#vp .vp_inline-btn'),
@@ -468,6 +482,7 @@ if(undefined == HTMLAudioElement){
         else $vp.set('+');
     }   // 自动切换
     p.oncanplay = function(){
+        $vp.e.btns.attr('action','play')[0].setAttribute('disabled',false);
         // 初始化时长度并播放
         $vp.e.timer.total.innerHTML = ($vp.range.duration || this.duration).timeToString();
         if($vp.seekto >= 0) {
@@ -476,6 +491,9 @@ if(undefined == HTMLAudioElement){
         }
         this.playbackRate = $vp.rate;
         this.play();
+    }
+    p.onemptied = function(){
+        $vp.e.btns.attr('action','play')[0].setAttribute('disabled',true);
     }
     p.onpause = function(){      // 暂停时
         $vp.e.play.playing.style.display = 'none';
@@ -500,6 +518,11 @@ if(undefined == HTMLAudioElement){
     };  // 时间更改时
     p.onvolumechange = function(){// 音量更改
         $vp.e.setting.volume.val = this.volume;
+    }
+    p.onerror = function(){
+        var e = $vp.e.error;
+        e.style.display = 'block';
+        setTimeout(()=>e.style.display = 'none',3000);
     }
 })();
 // 切换时长
