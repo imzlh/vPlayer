@@ -374,17 +374,19 @@ const $vp = {
         // CUE个性化设置
         if(src.type == 'cue'){
             var to = src.range[1] || src.range.end(),
-                next = this.list.get(i+1) || -1,
-                end = Math.ceil(next.range.end());
+                next = this.list.get(i +1),
+                end = (typeof next != "object" || next.type != 'cue')
+                    ?null :Math.ceil(next.range.end());
             this.seek(to);
             // 获取范围
-            if(this.list.get(i+1) != undefined)
-                this.range = {
-                    enable  : true,
-                    end     : end,
-                    start   : to,
-                    duration: end - to
-                };
+            this.range = {
+                enable  : true,
+                end     : end,
+                start   : to,
+                duration: function(){
+                    return end == null ? $vp.e.player.duration - to : end - to;
+                }
+            };
         }else this.range = {};
         this.curr_aid = i;  // 设置音频ID
     },
@@ -497,7 +499,7 @@ if(undefined == HTMLAudioElement){
     p.oncanplay = function(){
         $vp.e.btns.attr('action','play')[0].setAttribute('disabled',false);
         // 初始化时长度并播放
-        $vp.e.timer.total.innerHTML = ($vp.range.duration || this.duration).timeToString();
+        $vp.e.timer.total.innerHTML = ($vp.range.duration() || this.duration).timeToString();
         if($vp.seekto >= 0) {
             this.currentTime = $vp.seekto;
             $vp.seekto = -1;
@@ -528,7 +530,7 @@ if(undefined == HTMLAudioElement){
             ? this.currentTime - $vp.range.start
             : this.currentTime).timeToString();
         $vp.e.timer.bar.style.width = $vp.range.enable
-            ? (this.currentTime - $vp.range.start)/$vp.range.duration*100 + '%'
+            ? (this.currentTime - $vp.range.start)/$vp.range.duration()*100 + '%'
             : this.currentTime/this.duration*100 + '%';
     };  // 时间更改时
     p.onvolumechange = function(){// 音量更改
@@ -542,8 +544,9 @@ if(undefined == HTMLAudioElement){
 })();
 // 切换时长
 $vp.e.timer.barBox.onclick = function(e){
+    if(isNaN($vp.e.player.duration)) return true;
     $vp.e.player.currentTime = $vp.range.enable
-    ? e.pageX / this.clientWidth * $vp.range.duration + $vp.range.start
+    ? e.pageX / this.clientWidth * $vp.range.duration() + $vp.range.start
     : e.pageX / this.clientWidth * $vp.e.player.duration;
 }
 
