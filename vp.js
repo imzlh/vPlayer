@@ -2,6 +2,10 @@
  * vPlayer
  */
 
+console.log( '\n %c vPlayer v1 %c http://vplayer.imzlh.top \n',
+    'color: #87FDF4; background: #299BE1; padding:0.5rem 1rem;',
+    'background: #e3fafb; padding:0.5rem 1rem;');
+
 // ============ Array AT() ====================
 if(undefined == Array.prototype.at)
     Array.prototype.at = function(num){
@@ -96,7 +100,7 @@ Array.prototype.end = function(){
     return this[this.length -1];
 };
 
-$vp = {
+const $vp = {
     list : {
         list : [],      // 音频列表(允许RANGE和META)
         /**
@@ -111,7 +115,7 @@ $vp = {
                 prefix += '/';
             else prefix = prefix.toString();
             // CUE类型有一个特殊头
-            var file = cue.substr(3).split('\n') , data , inblock , $data, meta = {} , indent , _;
+            var file = cue.substr(3).split('\n') , data , inblock , $data, meta = {} , indent , _ , track;
             // 逐行解析
             for (let i = 0; i < file.length; i++)
                 if(file[i].trim() == '') continue;  // 空行
@@ -160,14 +164,16 @@ $vp = {
          * @param {有CUE的URL地址} url 
          * @param {如果有封面可以填写} cover
          */
-        load : function(url,cover,prefix){
-            var xhr = new XMLHttpRequest(); 
-            xhr.open('GET',url);        // AJAX请求CUE
-            if(undefined == prefix) prefix = url.substring(0,url.lastIndexOf('/'));
+        load : function(opt){
+            var xhr = new XMLHttpRequest() , id = this.list.length , prefix = opt.prefix; 
+            if(typeof opt.url != 'string') throw new TypeError("请指定CUE文件的url");
+            xhr.open('GET',opt.url);        // AJAX请求CUE
+            if(undefined == prefix) prefix = opt.url.substring(0,opt.url.lastIndexOf('/'));
             xhr.onload = function(){
                 if(this.status != 200) 
                     throw new Error('cue.js:加载失败,服务器返回了'+this.status);
-                $vp.list.parse(this.responseText,prefix,cover);
+                $vp.list.parse(this.responseText,prefix,opt.cover);
+                if(opt.autoplay) $vp.play(id);
             };
             xhr.onerror = function(){
                 throw new Error('cue.js:AJAX失败:状态码:'+this.readyState);
@@ -185,7 +191,8 @@ $vp = {
                 id = this.list.length;
             if(typeof opt.title != 'string') opt.title = decodeURIComponent(opt.file.split('/').end());
             if(typeof opt.performer != 'string') opt.performer = '未知歌手';
-            if(typeof opt.cover != 'string') opt.cover = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iY3VycmVudENvbG9yIiBjbGFzcz0iYmkgYmktc291bmR3YXZlIiB2aWV3Qm94PSIwIDAgMTYgMTYiPgogIDxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTguNSAyYS41LjUgMCAwIDEgLjUuNXYxMWEuNS41IDAgMCAxLTEgMHYtMTFhLjUuNSAwIDAgMSAuNS0uNXptLTIgMmEuNS41IDAgMCAxIC41LjV2N2EuNS41IDAgMCAxLTEgMHYtN2EuNS41IDAgMCAxIC41LS41em00IDBhLjUuNSAwIDAgMSAuNS41djdhLjUuNSAwIDAgMS0xIDB2LTdhLjUuNSAwIDAgMSAuNS0uNXptLTYgMS41QS41LjUgMCAwIDEgNSA2djRhLjUuNSAwIDAgMS0xIDBWNmEuNS41IDAgMCAxIC41LS41em04IDBhLjUuNSAwIDAgMSAuNS41djRhLjUuNSAwIDAgMS0xIDBWNmEuNS41IDAgMCAxIC41LS41em0tMTAgMUEuNS41IDAgMCAxIDMgN3YyYS41LjUgMCAwIDEtMSAwVjdhLjUuNSAwIDAgMSAuNS0uNXptMTIgMGEuNS41IDAgMCAxIC41LjV2MmEuNS41IDAgMCAxLTEgMFY3YS41LjUgMCAwIDEgLjUtLjV6Ii8+Cjwvc3ZnPg==';
+            if(typeof opt.cover != 'string') 
+                opt.cover = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgZmlsbD0iIzNkYjljZiI+PHBhdGggZD0ibTkuNTYyNSwxNi44NzVjMCwxLjEwNSAtMS4xMiwyIC0yLjUsMnMtMi41LC0wLjg5NSAtMi41LC0yYzAsLTEuMTA0IDEuMTIsLTIgMi41LC0yczIuNSwwLjg5NiAyLjUsMnptOSwtMmMwLDEuMTA1IC0xLjEyLDIgLTIuNSwycy0yLjUsLTAuODk1IC0yLjUsLTJzMS4xMiwtMiAyLjUsLTJzMi41LDAuODk1IDIuNSwyeiIvPjxwYXRoIGQ9Im0xNy41NjI1LDE0Ljg3NWwwLC05bDEsMGwwLDlsLTEsMHptLTgsLThsMCwxMGwtMSwwbDAsLTEwbDEsMHoiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjxwYXRoIGQ9Im04LjU2MjUsNi43OGExLDEgMCAwIDEgMC45LC0wLjk5NWw4LC0wLjhhMSwxIDAgMCAxIDEuMSwwLjk5NWwwLDAuODk1bC0xMCwxbDAsLTEuMDk1eiIvPjxlbGxpcHNlIHN0cm9rZT0iIzNkYjljZiIgZmlsbD0ibm9uZSIgcnk9IjEwLjEyNSIgcng9IjEwLjEyNSIgY3k9IjEyLjAxMjUiIGN4PSIxMS45NSIvPjwvc3ZnPg==';
             e.innerHTML = opt.title+' / <span style="color:gray">'+opt.performer+'</span>';
             e.onclick = function(){$vp.set(id);};
             $vp.e.playlist.append(e);
@@ -339,17 +346,18 @@ $vp = {
      * @param {第n首，可选} i 
      */
     set:function(i){
+        if(isNaN(this.curr_aid)) this.curr_aid = 0;
         // 自动决定
+        var len = this.list.list.length;
         if(undefined == i) i = this.curr_aid;
-        else if(i == '+') i = isNaN(this.curr_aid)?0:this.curr_aid+1;
-        else if(i == '-') i = this.curr_aid-1;
-        // 超界判断
-        if(i < 0) i += this.list.list.length;
-        else if(i >= this.list.list.length) i -= this.list.list.length;
+        else if(i == '+')
+            i = this.curr_aid >= len-1 ? 0 :this.curr_aid+1;
+        else if(i == '-')
+            i = -this.curr_aid >= len ? -1 : this.curr_aid-1;
         // 寻找目标
         var src = this.list.get(i);
         if(src == undefined || typeof src.file != 'string')
-            throw new TypeError('vp.js:设置的音频出错!');
+            throw new TypeError('vp.js:设置的音频出错!(ID:'+i+')');
         // 获取目标，刷新标题
         var pfm = src.performer
             title = src.title,
@@ -361,11 +369,13 @@ $vp = {
             else this.lrc.empty();
             this.e.cover.style.background = 'url("'+cover+'")',  // 设置封面
             this.e.player.src = src.file;
+            this.e.player.load();
         }
         // CUE个性化设置
         if(src.type == 'cue'){
             var to = src.range[1] || src.range.end(),
-                end = Math.ceil(this.list.get(i+1).range.end());
+                next = this.list.get(i+1) || -1,
+                end = Math.ceil(next.range.end());
             this.seek(to);
             // 获取范围
             if(this.list.get(i+1) != undefined)
@@ -477,6 +487,7 @@ if(undefined == HTMLAudioElement){
 // 播放器时间监听
 (function(){
     var p = $vp.e.player;
+    p.autoplay = true;
     p.onended = function(){
         if($vp.loop == 'loop') $vp.set();
         else if($vp.loop == 'random') 
@@ -492,10 +503,12 @@ if(undefined == HTMLAudioElement){
             $vp.seekto = -1;
         }
         this.playbackRate = $vp.rate;
-        this.play();
     }
     p.onemptied = function(){
         $vp.e.btns.attr('action','play')[0].setAttribute('disabled',true);
+        setTimeout(function(){
+            if(p.paused) try{ p.play(); }catch(e){p.onerror();}
+        },5000);
     }
     p.onpause = function(){      // 暂停时
         $vp.e.play.playing.style.display = 'none';

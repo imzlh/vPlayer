@@ -26,6 +26,7 @@
 .vp_inline-btn,.vp_btn{
     border-radius: 1em;
     transition: background 0.1s;
+    height: 1em;
 }
 .vp_inline-btn:hover,.vp_btn:hover{
     background-color: rgb(188, 188, 188);
@@ -246,15 +247,14 @@
     }
     #vp_lyrics{
         height: 100%;
-    }
-    #vp_more > *{
-        display: inline-block;
+        position: absolute;
+        inset: 0 0 auto auto;
     }
 }
 @media screen and (max-width:50rem) {
     #vp_cover{
         background-size: cover !important;
-        position: absolute;
+        position: fixed;
         inset: 0;
         width: 100vw !important;
         height: 100vh !important;

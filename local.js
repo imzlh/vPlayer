@@ -31,8 +31,10 @@ String.prototype.beforeLast = function(char){
             if(ext == 'cue' || ext == 'lrc'){// 歌词或cue
                 fr.onload = function(){
                     if(ext == 'cue'){
-                        alert('警告:CUE本地化是一个实验性功能!');
-                        $vp.list.parse(this.result,'file://'+prompt('请输入存放CUE文件的位置!'))
+                        var place = prompt('请输入存放CUE文件的位置!');
+                        if(place == '' || place == null)
+                            return alert('请输入位置！');
+                        $vp.list.parse(this.result,'file://'+place)
                     }else{
                         $vp.list.get($vp.curr_aid).lrctext = this.result;
                         $vp.lrc.parse(this.result);
