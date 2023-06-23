@@ -382,12 +382,10 @@ const $vp = {
             this.range = {
                 enable  : true,
                 end     : end,
-                start   : to,
-                duration: function(){
-                    return end == null ? $vp.e.player.duration - to : end - to;
-                }
+                start   : to
             };
         }else this.range = {};
+        this.e.player.play();
         this.curr_aid = i;  // 设置音频ID
     },
     seekTo : -1,        // 当可以播放后切换到的时间
@@ -404,6 +402,15 @@ const $vp = {
         if(time > this.e.player.duration)
             throw new TypeError('vp.js:希望播放的值大于总长度');
         this.e.player.currentTime = time;
+    },
+    /**
+     * 获取音频长度
+     */
+    duration : function(){
+        if(this.range.enable){
+            if(this.range.end == null) return $vp.e.player.duration - this.range.start;
+            else return this.range.end - this.range.start;
+        }else return $vp.e.player.duration;
     }
 }
 // 初始化API按钮
@@ -499,7 +506,7 @@ if(undefined == HTMLAudioElement){
     p.oncanplay = function(){
         $vp.e.btns.attr('action','play')[0].setAttribute('disabled',false);
         // 初始化时长度并播放
-        $vp.e.timer.total.innerHTML = ($vp.range.duration() || this.duration).timeToString();
+        $vp.e.timer.total.innerHTML = $vp.duration().timeToString();
         if($vp.seekto >= 0) {
             this.currentTime = $vp.seekto;
             $vp.seekto = -1;
@@ -509,7 +516,7 @@ if(undefined == HTMLAudioElement){
     p.onemptied = function(){
         $vp.e.btns.attr('action','play')[0].setAttribute('disabled',true);
         setTimeout(function(){
-            if(p.paused) try{ p.play(); }catch(e){p.onerror();}
+            if(p.paused) try{ p.load(); }catch(e){p.onerror();}
         },5000);
     }
     p.onpause = function(){      // 暂停时
@@ -530,7 +537,7 @@ if(undefined == HTMLAudioElement){
             ? this.currentTime - $vp.range.start
             : this.currentTime).timeToString();
         $vp.e.timer.bar.style.width = $vp.range.enable
-            ? (this.currentTime - $vp.range.start)/$vp.range.duration()*100 + '%'
+            ? (this.currentTime - $vp.range.start)/$vp.duration()*100 + '%'
             : this.currentTime/this.duration*100 + '%';
     };  // 时间更改时
     p.onvolumechange = function(){// 音量更改
@@ -546,7 +553,7 @@ if(undefined == HTMLAudioElement){
 $vp.e.timer.barBox.onclick = function(e){
     if(isNaN($vp.e.player.duration)) return true;
     $vp.e.player.currentTime = $vp.range.enable
-    ? e.pageX / this.clientWidth * $vp.range.duration() + $vp.range.start
+    ? e.pageX / this.clientWidth * $vp.duration() + $vp.range.start
     : e.pageX / this.clientWidth * $vp.e.player.duration;
 }
 

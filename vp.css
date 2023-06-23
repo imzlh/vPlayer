@@ -14,6 +14,9 @@
     padding: 0.5rem;
     text-align: center;
 }
+#vp_title{
+    max-width: 20em;
+}
 .vp_btn{
     display: block;
     padding: 0.2em;
